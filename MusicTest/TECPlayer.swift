@@ -16,7 +16,7 @@ protocol TECPlayerDelegate: class {
 }
 
 class TECPlayer: MPMoviePlayerViewController {
-    var avPlayer: AVPlayer?
+    var videoPlayer: AVPlayer?
     var audioPlayer: AVPlayer?
     var client: XCDYouTubeClient?
     weak var delegate: TECPlayerDelegate?
@@ -49,7 +49,8 @@ class TECPlayer: MPMoviePlayerViewController {
             self?.delegate?.tecPlayer(player: self, didFinishedInitializeWithResult: true)
         }
         
-        // Observe application event
+        // Observe application event, so that we can decide let video play or not. 
+        // (Audio player will keep playing in background until user pause or finished)
         NotificationCenter.default.addObserver(self, selector: #selector(self.applicationWillResignActive(notification:)), name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.applicationDidBecomeActive(notification:)), name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
@@ -91,13 +92,13 @@ class TECPlayer: MPMoviePlayerViewController {
         playerItem.delegate = self
         let player = AVPlayer()
         player.replaceCurrentItem(with: playerItem)
-        self.avPlayer = player
+        self.videoPlayer = player
         
         return true
     }
     
     func present(in view: UIView) {
-        guard let videoPlayer = self.avPlayer else {
+        guard let videoPlayer = self.videoPlayer else {
             return
         }
         let playerLayer = AVPlayerLayer(player: videoPlayer)
@@ -113,14 +114,14 @@ class TECPlayer: MPMoviePlayerViewController {
 
 extension TECPlayer {
     func applicationWillResignActive(notification: Notification) {
-        self.avPlayer?.pause()
+        self.videoPlayer?.pause()
     }
     func applicationDidBecomeActive(notification: Notification) {
         guard let ap = self.audioPlayer else {
             return
         }
-        self.avPlayer?.seek(to: ap.currentTime())
-        ap.rate > 0 ? self.avPlayer?.play() : self.avPlayer?.pause()
+        self.videoPlayer?.seek(to: ap.currentTime())
+        ap.rate > 0 ? self.videoPlayer?.play() : self.videoPlayer?.pause()
     }
 }
 
@@ -177,7 +178,7 @@ extension TECPlayer: TECPlayerItemDelegate {
         }
         
         if UIApplication.shared.applicationState == .active {
-            self.avPlayer?.play()
+            self.videoPlayer?.play()
         }
         
         self.audioPlayer?.play()
@@ -188,25 +189,25 @@ extension TECPlayer: TECPlayerItemDelegate {
 
 extension TECPlayer {
     func play() {
-        guard self.audioPlayer?.status == .readyToPlay && self.avPlayer?.status == .readyToPlay else {
+        guard self.audioPlayer?.status == .readyToPlay && self.videoPlayer?.status == .readyToPlay else {
             return
         }
         self.audioPlayer?.play()
-        self.avPlayer?.play()
+        self.videoPlayer?.play()
     }
     
     func pause() {
         self.audioPlayer?.pause()
-        self.avPlayer?.pause()
+        self.videoPlayer?.pause()
     }
     
     func stop() {
         self.audioPlayer?.pause()
-        self.avPlayer?.pause()
+        self.videoPlayer?.pause()
     }
     
     func isPlaying() -> Bool {
-        guard let vp = self.avPlayer, let ap = self.audioPlayer else {
+        guard let vp = self.videoPlayer, let ap = self.audioPlayer else {
             return false
         }
         return vp.rate > 0 || ap.rate > 0
@@ -214,9 +215,10 @@ extension TECPlayer {
     
     func playTrack(identifier: String) {
         self.audioPlayer?.pause()
-        self.avPlayer?.pause()
+        self.videoPlayer?.pause()
+        
         self.audioPlayer?.seek(to: kCMTimeZero)
-        self.avPlayer?.seek(to: kCMTimeZero)
+        self.videoPlayer?.seek(to: kCMTimeZero)
         
         self.client?.getVideoWithIdentifier(identifier) { [weak self] (video, error) in
             guard let video = video else {
@@ -241,7 +243,7 @@ extension TECPlayer {
             videoItem.delegate = self
             audioItem.delegate = self
             
-            self?.avPlayer?.replaceCurrentItem(with: videoItem)
+            self?.videoPlayer?.replaceCurrentItem(with: videoItem)
             self?.audioPlayer?.replaceCurrentItem(with: audioItem)
             
             self?.configMPInfo(data: video)
