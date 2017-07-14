@@ -18,11 +18,14 @@ protocol TECPlayerItemDelegate {
 class TECPlayerItem: AVPlayerItem {
     var delegate: TECPlayerItemDelegate?
     init(url: URL) {
+        // Asset loading from internet will take some times.
+        // Add observer to watch status and tell delegate when process is done.
         super.init(asset: AVAsset(url:url), automaticallyLoadedAssetKeys: ["playable"])
         self.addSelfObservers()
     }
     
     deinit {
+        // TODO: Need to test.
         self.removeSelfObservers()
     }
     
