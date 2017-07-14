@@ -15,6 +15,13 @@ protocol TECPlayerDelegate: class {
     func tecPlayer(player: TECPlayer?, didFinishedInitializeWithResult result: Bool)
 }
 
+// TODO: Fill all case according to youtube codec table.
+enum YouTubeQueality: Int {
+    case movie360p = 18
+    case video = 134
+    case audio = 140
+}
+
 class TECPlayer: MPMoviePlayerViewController {
     var videoPlayer: AVPlayer?
     var audioPlayer: AVPlayer?
@@ -69,7 +76,7 @@ class TECPlayer: MPMoviePlayerViewController {
     
     func initAudioPlayer(_ video: XCDYouTubeVideo) -> Bool {
         // 140 = Audio
-        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: 140) else {
+        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQueality.audio.rawValue) else {
             return false
         }
         
@@ -84,7 +91,7 @@ class TECPlayer: MPMoviePlayerViewController {
     
     func initVideoPlayer(_ video: XCDYouTubeVideo) -> Bool {
         // 18 = Video + Audio, 360p
-        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: 134) else {
+        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQueality.video.rawValue) else {
             return false
         }
         
@@ -226,12 +233,12 @@ extension TECPlayer {
                 return
             }
             
-            guard let videoUrl = self?.retrieve(URLs: video.streamURLs, ByKey: 134) else {
+            guard let videoUrl = self?.retrieve(URLs: video.streamURLs, ByKey: YouTubeQueality.video.rawValue) else {
                 print("Video stream url not found")
                 return
             }
             
-            guard let audioUrl = self?.retrieve(URLs: video.streamURLs, ByKey: 140) else {
+            guard let audioUrl = self?.retrieve(URLs: video.streamURLs, ByKey: YouTubeQueality.audio.rawValue) else {
                 print("Aideo stream url not found")
                 return
             }
