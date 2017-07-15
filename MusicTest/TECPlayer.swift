@@ -78,6 +78,10 @@ class TECPlayer: MPMoviePlayerViewController {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+        
+        if let observer = self.playerTimeObserver {
+            self.audioPlayer?.removeTimeObserver(observer)
+        }
     }
     
     func initAudioPlayer(_ video: XCDYouTubeVideo) -> Bool {
