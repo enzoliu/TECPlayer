@@ -12,7 +12,7 @@ import AVKit
 
 
 protocol TECPlayerItemDelegate {
-    func tecPlayerItem(playerItem: AVPlayerItem, playable: Bool)
+    func tecPlayerItem(playerItem: TECPlayerItem, playable: Bool)
 }
 
 class TECPlayerItem: AVPlayerItem {
@@ -35,6 +35,10 @@ class TECPlayerItem: AVPlayerItem {
     
     func removeSelfObservers() {
         self.removeObserver(self, forKeyPath: "status", context: nil)
+    }
+    
+    func getCorrectDuration() -> CMTime {
+        return CMTime(seconds: CMTimeGetSeconds(self.duration) / 2, preferredTimescale: self.duration.timescale)
     }
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {

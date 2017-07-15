@@ -17,7 +17,7 @@ protocol TECPlayerDelegate: class {
 }
 
 // TODO: Fill all case according to youtube codec table.
-enum YouTubeQueality: Int {
+enum YouTubeQuality: Int {
     case movie360p = 18
     case video = 134
     case audio = 140
@@ -27,6 +27,8 @@ class TECPlayer: MPMoviePlayerViewController {
     var videoPlayer: AVPlayer?
     var audioPlayer: AVPlayer?
     var client: XCDYouTubeClient?
+    var playerTimeObserver: Any?
+    
     weak var delegate: TECPlayerDelegate?
     
     init(movieIdentifier: String) {
@@ -79,8 +81,7 @@ class TECPlayer: MPMoviePlayerViewController {
     }
     
     func initAudioPlayer(_ video: XCDYouTubeVideo) -> Bool {
-        // 140 = Audio
-        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQueality.audio.rawValue) else {
+        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.audio.rawValue) else {
             return false
         }
         
@@ -94,8 +95,7 @@ class TECPlayer: MPMoviePlayerViewController {
     }
     
     func initVideoPlayer(_ video: XCDYouTubeVideo) -> Bool {
-        // 18 = Video + Audio, 360p
-        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQueality.video.rawValue) else {
+        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.video.rawValue) else {
             return false
         }
         
@@ -137,7 +137,6 @@ extension TECPlayer {
     }
     
     func playerItemDidFinishedPlay(notification: Notification) {
-        print("end detected by observing in notification center")
         self.audioPlayer?.pause()
         self.videoPlayer?.pause()
         
@@ -196,13 +195,26 @@ extension TECPlayer {
 // MARK:- Delegate
 
 extension TECPlayer: TECPlayerItemDelegate {
-    func tecPlayerItem(playerItem: AVPlayerItem, playable: Bool) {
+    func tecPlayerItem(playerItem: TECPlayerItem, playable: Bool) {
         guard playable else {
             return
         }
+        
+        // For the issue "two times of duration", we need to set an observer to handle playEnd event.
+        // Remove exist observer.
+        if let observer = self.playerTimeObserver {
+            self.audioPlayer?.removeTimeObserver(observer)
+        }
+        // Add new observer
+        let correctTime = NSValue(time: playerItem.getCorrectDuration())
+        self.playerTimeObserver = self.audioPlayer?.addBoundaryTimeObserver(forTimes: [correctTime], queue: DispatchQueue.main) {
+            NotificationCenter.default.post(name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+        }
+        
         if UIApplication.shared.applicationState == .active {
             self.videoPlayer?.play()
         }
+        
         self.audioPlayer?.play()
     }
 }
@@ -248,12 +260,12 @@ extension TECPlayer {
                 return
             }
             
-            guard let videoUrl = self?.retrieve(URLs: video.streamURLs, ByKey: YouTubeQueality.video.rawValue) else {
+            guard let videoUrl = self?.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.video.rawValue) else {
                 print("Video stream url not found")
                 return
             }
             
-            guard let audioUrl = self?.retrieve(URLs: video.streamURLs, ByKey: YouTubeQueality.audio.rawValue) else {
+            guard let audioUrl = self?.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.audio.rawValue) else {
                 print("Aideo stream url not found")
                 return
             }
