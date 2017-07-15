@@ -14,6 +14,7 @@ class ViewController: UIViewController {
     weak var loadingAnimatore: UIActivityIndicatorView?
     weak var containerView: UIView?
     var tecPlayer: TECPlayer?
+    var autoPlayNextTrack: Bool = true
     
     let playList: [String] = ["5J6nx6E3JvU", "OVzGw8v6huw", "O7Ahy4g9cTQ"]
     var current: Int = 0
@@ -96,7 +97,6 @@ extension ViewController {
     }
     
     func nextTrackCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
-        print("nextTrackCommand")
         guard self.current >= 0 else {
             return MPRemoteCommandHandlerStatus.commandFailed
         }
@@ -112,7 +112,6 @@ extension ViewController {
     }
     
     func previousTrackCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
-        print("previousTrackCommand")
         guard self.current > 0 else {
             return MPRemoteCommandHandlerStatus.commandFailed
         }
@@ -128,13 +127,11 @@ extension ViewController {
     }
     
     func playCommend(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
-        print("playCommend")
         self.tecPlayer?.play()
         return MPRemoteCommandHandlerStatus.success
     }
     
     func pauseCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
-        print("pauseCommand")
         self.tecPlayer?.pause()
         return MPRemoteCommandHandlerStatus.success
     }

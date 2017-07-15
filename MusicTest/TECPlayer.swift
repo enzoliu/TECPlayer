@@ -13,6 +13,7 @@ import AVKit
 
 protocol TECPlayerDelegate: class {
     func tecPlayer(player: TECPlayer?, didFinishedInitializeWithResult result: Bool)
+    func didFinishedCurrentItemPlay(player: TECPlayer?)
 }
 
 // TODO: Fill all case according to youtube codec table.
@@ -62,6 +63,8 @@ class TECPlayer: MPMoviePlayerViewController {
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.applicationDidBecomeActive(notification:)), name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
         
+        NotificationCenter.default.addObserver(self, selector: #selector(self.playerItemDidFinishedPlay(notification:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.audioPlayer?.currentItem)
+        
         self.client = client
     }
     
@@ -72,6 +75,7 @@ class TECPlayer: MPMoviePlayerViewController {
     deinit {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillResignActive, object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
     }
     
     func initAudioPlayer(_ video: XCDYouTubeVideo) -> Bool {
@@ -123,12 +127,21 @@ extension TECPlayer {
     func applicationWillResignActive(notification: Notification) {
         self.videoPlayer?.pause()
     }
+    
     func applicationDidBecomeActive(notification: Notification) {
         guard let ap = self.audioPlayer else {
             return
         }
         self.videoPlayer?.seek(to: ap.currentTime())
         ap.rate > 0 ? self.videoPlayer?.play() : self.videoPlayer?.pause()
+    }
+    
+    func playerItemDidFinishedPlay(notification: Notification) {
+        print("end detected by observing in notification center")
+        self.audioPlayer?.pause()
+        self.videoPlayer?.pause()
+        
+        self.delegate?.didFinishedCurrentItemPlay(player: self)
     }
 }
 
@@ -149,7 +162,10 @@ extension TECPlayer {
     }
     
     func configMPInfo(data: XCDYouTubeVideo) {
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = [MPMediaItemPropertyTitle : data.title]
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = [
+            MPMediaItemPropertyTitle : data.title,
+            MPMediaItemPropertyPlaybackDuration : data.duration
+        ]
         
         if let thumbnailURL = data.largeThumbnailURL ?? data.mediumThumbnailURL ?? data.smallThumbnailURL {
             let request = URLRequest(url: thumbnailURL)
@@ -168,6 +184,7 @@ extension TECPlayer {
                 })
                 MPNowPlayingInfoCenter.default().nowPlayingInfo = [
                     MPMediaItemPropertyTitle : data.title,
+                    MPMediaItemPropertyPlaybackDuration : data.duration,
                     MPMediaItemPropertyArtwork : artWork
                 ]
             }
@@ -183,11 +200,9 @@ extension TECPlayer: TECPlayerItemDelegate {
         guard playable else {
             return
         }
-        
         if UIApplication.shared.applicationState == .active {
             self.videoPlayer?.play()
         }
-        
         self.audioPlayer?.play()
     }
 }
@@ -247,11 +262,11 @@ extension TECPlayer {
             let audioItem = TECPlayerItem(url: audioUrl)
             
             // TODO: Need to handle both status when ready.
-            videoItem.delegate = self
             audioItem.delegate = self
+            videoItem.delegate = self
             
-            self?.videoPlayer?.replaceCurrentItem(with: videoItem)
             self?.audioPlayer?.replaceCurrentItem(with: audioItem)
+            self?.videoPlayer?.replaceCurrentItem(with: videoItem)
             
             self?.configMPInfo(data: video)
         }
