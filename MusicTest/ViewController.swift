@@ -76,6 +76,23 @@ extension ViewController: TECPlayerDelegate {
             player?.present(in: container)
         }
     }
+    
+    func didFinishedCurrentItemPlay(player: TECPlayer?) {
+        guard self.autoPlayNextTrack else {
+            return
+        }
+        
+        guard self.current >= 0 else {
+            return
+        }
+        
+        guard self.current < self.playList.count - 1 else {
+            return
+        }
+        
+        self.current += 1
+        self.tecPlayer?.playTrack(identifier: self.playList[self.current])
+    }
 }
 
 // MARK:- Remote control
