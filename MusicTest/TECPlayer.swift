@@ -8,7 +8,6 @@
 
 import Foundation
 import MediaPlayer
-import XCDYouTubeKit
 import AVKit
 
 protocol TECPlayerDelegate: class {
@@ -16,48 +15,35 @@ protocol TECPlayerDelegate: class {
     func didFinishedCurrentItemPlay(player: TECPlayer?)
 }
 
-// TODO: Fill all case according to youtube codec table.
-enum YouTubeQuality: Int {
-    case movie360p = 18
-    case video = 134
-    case audio = 140
+struct TECPlayerData {
+    var title: String
+    var thumbnailURL: URL?
+    var duration: TimeInterval
+    var videoURL: URL?
+    var audioURL: URL?
+    
+    init(title: String, duration: TimeInterval) {
+        self.title = title
+        self.duration = duration
+    }
 }
 
-class TECPlayer: MPMoviePlayerViewController {
+class TECPlayer: MPMoviePlayerViewController, XCDParser {
     var videoPlayer: AVPlayer?
     var audioPlayer: AVPlayer?
-    var client: XCDYouTubeClient?
     var playerTimeObserver: Any?
+    var isInit = false
     
     weak var delegate: TECPlayerDelegate?
     
     init(movieIdentifier: String) {
         super.init(contentURL: URL(string: ""))
-        let client = XCDYouTubeClient()
-        client.getVideoWithIdentifier(movieIdentifier) { [weak self] (video, error) in
-            guard let video = video else {
-                print("Video extraction failed")
-                self?.delegate?.tecPlayer(player: self, didFinishedInitializeWithResult: false)
-                return
-            }
-            
-            guard self?.initVideoPlayer(video) == true else {
-                print("Video initialization failed")
-                self?.delegate?.tecPlayer(player: self, didFinishedInitializeWithResult: false)
-                return
-            }
-            
-            guard self?.initAudioPlayer(video) == true else {
-                print("Audio initialzation failed")
-                self?.delegate?.tecPlayer(player: self, didFinishedInitializeWithResult: false)
-                return
-            }
-            
-            self?.configMPInfo(data: video)
-            self?.moviePlayer.stop()
-            self?.moviePlayer.view.isHidden = true
-            self?.delegate?.tecPlayer(player: self, didFinishedInitializeWithResult: true)
-        }
+        
+        self.initVideoPlayer()
+        self.initAudioPlayer()
+        self.moviePlayer.stop()
+        self.moviePlayer.view.isHidden = true
+        self.playTrack(identifier: movieIdentifier)
         
         // Observe application event, so that we can decide let video play or not. 
         // (Audio player will keep playing in background until user pause or finished)
@@ -66,8 +52,6 @@ class TECPlayer: MPMoviePlayerViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(self.applicationDidBecomeActive(notification:)), name: NSNotification.Name.UIApplicationDidBecomeActive, object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.playerItemDidFinishedPlay(notification:)), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.audioPlayer?.currentItem)
-        
-        self.client = client
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -84,32 +68,14 @@ class TECPlayer: MPMoviePlayerViewController {
         }
     }
     
-    func initAudioPlayer(_ video: XCDYouTubeVideo) -> Bool {
-        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.audio.rawValue) else {
-            return false
-        }
-        
-        let playerItem = TECPlayerItem(url: url)
-        playerItem.delegate = self
+    func initAudioPlayer() {
         let player = AVPlayer()
-        player.replaceCurrentItem(with: playerItem)
         self.audioPlayer = player
-        
-        return true
     }
     
-    func initVideoPlayer(_ video: XCDYouTubeVideo) -> Bool {
-        guard let url = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.video.rawValue) else {
-            return false
-        }
-        
-        let playerItem = TECPlayerItem(url: url)
-        playerItem.delegate = self
+    func initVideoPlayer() {
         let player = AVPlayer()
-        player.replaceCurrentItem(with: playerItem)
         self.videoPlayer = player
-        
-        return true
     }
     
     func present(in view: UIView) {
@@ -164,13 +130,13 @@ extension TECPlayer {
         return url
     }
     
-    func configMPInfo(data: XCDYouTubeVideo) {
+    func configMPInfo(data: TECPlayerData) {
         MPNowPlayingInfoCenter.default().nowPlayingInfo = [
             MPMediaItemPropertyTitle : data.title,
             MPMediaItemPropertyPlaybackDuration : data.duration
         ]
         
-        if let thumbnailURL = data.largeThumbnailURL ?? data.mediumThumbnailURL ?? data.smallThumbnailURL {
+        if let thumbnailURL = data.thumbnailURL {
             let request = URLRequest(url: thumbnailURL)
             let session = URLSession.shared
             let task = session.dataTask(with: request) { imgData, response, error in
@@ -258,18 +224,18 @@ extension TECPlayer {
         self.audioPlayer?.seek(to: kCMTimeZero)
         self.videoPlayer?.seek(to: kCMTimeZero)
         
-        self.client?.getVideoWithIdentifier(identifier) { [weak self] (video, error) in
+        self.load(identifier: identifier) { [weak self] video in
             guard let video = video else {
                 print("Video extraction failed")
                 return
             }
             
-            guard let videoUrl = self?.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.video.rawValue) else {
+            guard let videoUrl = video.videoURL else {
                 print("Video stream url not found")
                 return
             }
             
-            guard let audioUrl = self?.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.audio.rawValue) else {
+            guard let audioUrl = video.audioURL else {
                 print("Aideo stream url not found")
                 return
             }
@@ -285,6 +251,11 @@ extension TECPlayer {
             self?.videoPlayer?.replaceCurrentItem(with: videoItem)
             
             self?.configMPInfo(data: video)
+            
+            if self?.isInit == false {
+                self?.delegate?.tecPlayer(player: self, didFinishedInitializeWithResult: true)
+                self?.isInit = true
+            }
         }
     }
 }

@@ -24,15 +24,13 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Init layout
+        self.layout()
+        
         // Init player
         let player = TECPlayer(movieIdentifier: self.playList[current])
         player.delegate = self
         self.tecPlayer = player
-        
-        
-        // Init layout
-        self.layout()
-        
         
         // Init config
         self.configRemoteControl()

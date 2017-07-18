@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		637DCB181F1DA53900FD499C /* XCDParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 637DCB171F1DA53900FD499C /* XCDParser.swift */; };
 		639266AB1F146E0200837375 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639266AA1F146E0200837375 /* AppDelegate.swift */; };
 		639266AD1F146E0200837375 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639266AC1F146E0200837375 /* ViewController.swift */; };
 		639266B01F146E0200837375 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 639266AE1F146E0200837375 /* Main.storyboard */; };
@@ -19,6 +20,7 @@
 
 /* Begin PBXFileReference section */
 		1CDDF0B7E26A90E9B29F25C4 /* Pods-MusicTest.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MusicTest.release.xcconfig"; path = "Pods/Target Support Files/Pods-MusicTest/Pods-MusicTest.release.xcconfig"; sourceTree = "<group>"; };
+		637DCB171F1DA53900FD499C /* XCDParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = XCDParser.swift; sourceTree = "<group>"; };
 		639266A71F146E0200837375 /* MusicTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MusicTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		639266AA1F146E0200837375 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		639266AC1F146E0200837375 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -77,6 +79,7 @@
 				639266AA1F146E0200837375 /* AppDelegate.swift */,
 				639266AC1F146E0200837375 /* ViewController.swift */,
 				639BF7501F185F7100D96C4B /* TECPlayer.swift */,
+				637DCB171F1DA53900FD499C /* XCDParser.swift */,
 				C4FA85051F193DB400552809 /* TECPlayerItem.swift */,
 				639266AE1F146E0200837375 /* Main.storyboard */,
 				639266B11F146E0200837375 /* Assets.xcassets */,
@@ -227,6 +230,7 @@
 				639266AD1F146E0200837375 /* ViewController.swift in Sources */,
 				639266AB1F146E0200837375 /* AppDelegate.swift in Sources */,
 				C4FA85061F193DB400552809 /* TECPlayerItem.swift in Sources */,
+				637DCB181F1DA53900FD499C /* XCDParser.swift in Sources */,
 				639BF7511F185F7100D96C4B /* TECPlayer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
