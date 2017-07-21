@@ -32,7 +32,6 @@ class TECPlayer: MPMoviePlayerViewController, XCDParser {
     var videoPlayer: AVPlayer?
     var audioPlayer: AVPlayer?
     var playerTimeObserver: Any?
-    var isInit = false
     
     weak var delegate: TECPlayerDelegate?
     
@@ -117,19 +116,6 @@ extension TECPlayer {
 // MARK:- Data method
 
 extension TECPlayer {
-    func retrieve(URLs urls: [AnyHashable: URL], ByKey key: Int) -> URL? {
-        let hKey = urls.keys.filter{ x in return (x as? Int) == key }.first
-        guard let unwrapHKey = hKey else {
-            return nil
-        }
-        
-        guard let url = urls[unwrapHKey] else {
-            return nil
-        }
-        
-        return url
-    }
-    
     func configMPInfo(data: TECPlayerData) {
         MPNowPlayingInfoCenter.default().nowPlayingInfo = [
             MPMediaItemPropertyTitle : data.title,
@@ -252,10 +238,7 @@ extension TECPlayer {
             
             self?.configMPInfo(data: video)
             
-            if self?.isInit == false {
-                self?.delegate?.tecPlayer(player: self, didFinishedInitializeWithResult: true)
-                self?.isInit = true
-            }
+            self?.delegate?.tecPlayer(player: self, didFinishedInitializeWithResult: true)
         }
     }
 }
