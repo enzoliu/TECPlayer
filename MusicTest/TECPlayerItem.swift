@@ -17,6 +17,14 @@ protocol TECPlayerItemDelegate {
 
 class TECPlayerItem: AVPlayerItem {
     var delegate: TECPlayerItemDelegate?
+    var videoID: String?
+    var type: ItemType?
+    var needObserver = false
+    enum ItemType {
+        case video
+        case audio
+        case av
+    }
     init(url: URL) {
         // Asset loading from internet will take some times.
         // Add observer to watch status and tell delegate when process is done.
@@ -24,12 +32,18 @@ class TECPlayerItem: AVPlayerItem {
         self.addSelfObservers()
     }
     
+    override init(asset: AVAsset, automaticallyLoadedAssetKeys: [String]?) {
+        super.init(asset: asset, automaticallyLoadedAssetKeys: automaticallyLoadedAssetKeys)
+    }
+    
     deinit {
-        // TODO: Need to test.
-        self.removeSelfObservers()
+        if self.needObserver {
+            self.removeSelfObservers()
+        }
     }
     
     func addSelfObservers() {
+        self.needObserver = true
         self.addObserver(self, forKeyPath: "status", options: [.new, .old], context: nil)
     }
     

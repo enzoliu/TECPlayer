@@ -25,17 +25,20 @@ extension XCDParser {
     func load(identifier: String, callback:@escaping (_ data: TECPlayerData?) -> Void) {
         let client = XCDYouTubeClient()
         client.getVideoWithIdentifier(identifier) { video, error in
+            var errorData = TECPlayerData(title: "", duration: 0)
+            errorData.urlStatus = .error
             guard let video = video else {
-                callback(nil)
-                return
-            }
-            guard let audioURL = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.audio.rawValue) else {
-                callback(nil)
+                callback(errorData)
                 return
             }
             
             guard let videoURL = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.video.rawValue) else {
-                callback(nil)
+                callback(errorData)
+                return
+            }
+            
+            guard let audioURL = self.retrieve(URLs: video.streamURLs, ByKey: YouTubeQuality.audio.rawValue) else {
+                callback(errorData)
                 return
             }
             
@@ -43,6 +46,7 @@ extension XCDParser {
             rtnData.audioURL = audioURL
             rtnData.videoURL = videoURL
             rtnData.thumbnailURL = video.largeThumbnailURL ?? video.mediumThumbnailURL ?? video.smallThumbnailURL
+            rtnData.urlStatus = .avok
             callback(rtnData)
         }
     }

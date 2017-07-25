@@ -12,13 +12,13 @@ import MediaPlayer
 
 class ViewController: UIViewController {
     weak var loadingAnimatore: UIActivityIndicatorView?
-    weak var containerView: UIView?
+    weak var containerView: VideoContainer?
     var tecPlayer: TECPlayer?
     var autoPlayNextTrack: Bool = true
     
-    let playList: [String] = ["5J6nx6E3JvU", "OVzGw8v6huw", "O7Ahy4g9cTQ"]
+    let playList: [String] = ["5J6nx6E3JvU", "39m5GLMlq0Y", "O7Ahy4g9cTQ"]
     var current: Int = 0
-    
+
     override var canBecomeFirstResponder: Bool { return true }
     
     override func viewDidLoad() {
@@ -34,6 +34,10 @@ class ViewController: UIViewController {
         
         // Init config
         self.configRemoteControl()
+        
+        // Pre-Load demo
+        self.tecPlayer?.preloadVideo(identifier: "39m5GLMlq0Y")
+        self.tecPlayer?.preloadVideo(identifier: "O7Ahy4g9cTQ")
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -47,7 +51,7 @@ class ViewController: UIViewController {
         self.view.backgroundColor = .white
         
         // Video container view
-        let container = UIView(frame: CGRect(x: 0, y: 0, width: fullWidth, height: videoHeight))
+        let container = VideoContainer(frame: CGRect(x: 0, y: 0, width: fullWidth, height: videoHeight))
         container.center = CGPoint(x: fullWidth / 2, y: UIScreen.main.bounds.height / 2)
         self.view.addSubview(container)
         self.containerView = container
@@ -89,7 +93,10 @@ extension ViewController: TECPlayerDelegate {
         }
         
         self.current += 1
-        self.tecPlayer?.playTrack(identifier: self.playList[self.current])
+        self.tecPlayer?.playTrack(identifier: self.playList[self.current]){ error in
+            print(error["msg"] ?? "Unknown Error.")
+        }
+        
     }
 }
 
@@ -101,6 +108,20 @@ extension ViewController {
         
         mrc.nextTrackCommand.isEnabled = true
         mrc.nextTrackCommand.addTarget(handler: self.nextTrackCommand(event:))
+        
+        
+        if #available(iOS 9.1, *) {
+            mrc.changePlaybackPositionCommand.isEnabled = true
+            mrc.changePlaybackPositionCommand.addTarget(handler: self.seekCommand(event:))
+            
+            // Not show
+            mrc.changeRepeatModeCommand.isEnabled = true
+            mrc.changeRepeatModeCommand.addTarget(handler: self.loopCommand(event:))
+            
+            // Not show
+            mrc.changeShuffleModeCommand.isEnabled = true
+            mrc.changeShuffleModeCommand.addTarget(handler: self.shuffleCommand(event:))
+        }
         
         mrc.previousTrackCommand.isEnabled = true
         mrc.previousTrackCommand.addTarget(handler: self.previousTrackCommand(event:))
@@ -121,25 +142,43 @@ extension ViewController {
         }
         
         self.current += 1
-        self.tecPlayer?.playTrack(identifier: self.playList[self.current])
-        
+        self.tecPlayer?.playTrack(identifier: self.playList[self.current]){ error in
+            print(error["msg"] ?? "Unknown Error.")
+        }
         return MPRemoteCommandHandlerStatus.success
     }
     
     func previousTrackCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
-        guard self.current > 0 else {
+        guard self.current >= 1 else {
             return MPRemoteCommandHandlerStatus.commandFailed
         }
         
-        guard self.current < self.playList.count else {
+        guard self.current <= self.playList.count - 1 else {
             return MPRemoteCommandHandlerStatus.commandFailed
         }
         
         self.current -= 1
-        self.tecPlayer?.playTrack(identifier: self.playList[self.current])
-        
+        self.tecPlayer?.playTrack(identifier: self.playList[self.current]){ error in
+            print(error["msg"] ?? "Unknown Error.")
+        }
         return MPRemoteCommandHandlerStatus.success
     }
+    
+    func seekCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        //self.sendChangeStateEvent("playing")
+        let event_ = event as! MPChangePlaybackPositionCommandEvent
+        self.tecPlayer?.seek(to: event_.positionTime)
+        return MPRemoteCommandHandlerStatus.success
+    }
+    
+    func loopCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        return MPRemoteCommandHandlerStatus.success
+    }
+    
+    func shuffleCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        return MPRemoteCommandHandlerStatus.success
+    }
+    
     
     func playCommend(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
         self.tecPlayer?.play()
