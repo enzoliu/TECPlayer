@@ -136,19 +136,6 @@ extension TECPlayer {
 // MARK:- Data method
 
 extension TECPlayer {
-    func retrieve(URLs urls: [AnyHashable: URL], ByKey key: Int) -> URL? {
-        let hKey = urls.keys.filter{ x in return (x as? Int) == key }.first
-        guard let unwrapHKey = hKey else {
-            return nil
-        }
-        
-        guard let url = urls[unwrapHKey] else {
-            return nil
-        }
-        
-        return url
-    }
-    
     func configMPInfo(data: TECPlayerData) {
         MPNowPlayingInfoCenter.default().nowPlayingInfo = [
             MPMediaItemPropertyTitle : data.title,
@@ -402,7 +389,7 @@ extension TECPlayer {
             videoItem.delegate = self
             videoItem.videoID = identifier
             videoItem.type = .video
-            
+
             self.audioPlayer?.replaceCurrentItem(with: audioItem)
             self.videoPlayer?.replaceCurrentItem(with: videoItem)
         } else {
@@ -418,5 +405,4 @@ extension TECPlayer {
             self.isInit = true
         }
     }
-    
 }
