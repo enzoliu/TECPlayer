@@ -34,6 +34,10 @@ class ViewController: UIViewController {
         
         // Init config
         self.configRemoteControl()
+        
+        // Pre-Load demo
+        self.tecPlayer?.preloadVideo(identifier: "39m5GLMlq0Y")
+        self.tecPlayer?.preloadVideo(identifier: "O7Ahy4g9cTQ")
     }
     
     override func viewDidAppear(_ animated: Bool) {
