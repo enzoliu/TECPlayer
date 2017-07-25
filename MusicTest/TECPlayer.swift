@@ -78,16 +78,12 @@ class TECPlayer: MPMoviePlayerViewController, XCDParser {
         self.videoPlayer = player
     }
     
-    func present(in view: UIView) {
+    func present(in view: VideoContainer) {
         guard let videoPlayer = self.videoPlayer else {
             return
         }
-        let playerLayer = AVPlayerLayer(player: videoPlayer)
-        playerLayer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: view.frame.height)
-        
-        if true != view.layer.sublayers?.contains(playerLayer) {
-            view.layer.addSublayer(playerLayer)
-        }
+        (view.layer as! AVPlayerLayer).player = videoPlayer
+        (view.layer as! AVPlayerLayer).videoGravity = AVLayerVideoGravityResizeAspect
     }
 }
 

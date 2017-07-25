@@ -12,13 +12,13 @@ import MediaPlayer
 
 class ViewController: UIViewController {
     weak var loadingAnimatore: UIActivityIndicatorView?
-    weak var containerView: UIView?
+    weak var containerView: VideoContainer?
     var tecPlayer: TECPlayer?
     var autoPlayNextTrack: Bool = true
     
-    let playList: [String] = ["5J6nx6E3JvU", "OVzGw8v6huw", "O7Ahy4g9cTQ"]
+    let playList: [String] = ["5J6nx6E3JvU", "39m5GLMlq0Y", "O7Ahy4g9cTQ"]
     var current: Int = 0
-    
+
     override var canBecomeFirstResponder: Bool { return true }
     
     override func viewDidLoad() {
@@ -47,7 +47,7 @@ class ViewController: UIViewController {
         self.view.backgroundColor = .white
         
         // Video container view
-        let container = UIView(frame: CGRect(x: 0, y: 0, width: fullWidth, height: videoHeight))
+        let container = VideoContainer(frame: CGRect(x: 0, y: 0, width: fullWidth, height: videoHeight))
         container.center = CGPoint(x: fullWidth / 2, y: UIScreen.main.bounds.height / 2)
         self.view.addSubview(container)
         self.containerView = container
