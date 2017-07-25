@@ -180,14 +180,20 @@ extension TECPlayer: TECPlayerItemDelegate {
         if UIApplication.shared.applicationState == .active {
             self.videoPlayer?.play()
         }
-        
         self.audioPlayer?.play()
+        
     }
 }
 
 // MARK:- Player Control
 
 extension TECPlayer {
+    
+    func seek(to time: TimeInterval) {
+        let cmTime = CMTimeMake(Int64(time), 1)
+        self.audioPlayer?.seek(to: cmTime)
+        self.videoPlayer?.seek(to: cmTime)
+    }
     func play() {
         guard self.audioPlayer?.status == .readyToPlay && self.videoPlayer?.status == .readyToPlay else {
             return

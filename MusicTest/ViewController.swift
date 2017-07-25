@@ -89,7 +89,10 @@ extension ViewController: TECPlayerDelegate {
         }
         
         self.current += 1
-        self.tecPlayer?.playTrack(identifier: self.playList[self.current])
+        self.tecPlayer?.playTrack(identifier: self.playList[self.current]){ error in
+            print(error["msg"] ?? "Unknown Error.")
+        }
+        
     }
 }
 
@@ -101,6 +104,20 @@ extension ViewController {
         
         mrc.nextTrackCommand.isEnabled = true
         mrc.nextTrackCommand.addTarget(handler: self.nextTrackCommand(event:))
+        
+        
+        if #available(iOS 9.1, *) {
+            mrc.changePlaybackPositionCommand.isEnabled = true
+            mrc.changePlaybackPositionCommand.addTarget(handler: self.seekCommand(event:))
+            
+            // Not show
+            mrc.changeRepeatModeCommand.isEnabled = true
+            mrc.changeRepeatModeCommand.addTarget(handler: self.loopCommand(event:))
+            
+            // Not show
+            mrc.changeShuffleModeCommand.isEnabled = true
+            mrc.changeShuffleModeCommand.addTarget(handler: self.shuffleCommand(event:))
+        }
         
         mrc.previousTrackCommand.isEnabled = true
         mrc.previousTrackCommand.addTarget(handler: self.previousTrackCommand(event:))
@@ -121,25 +138,43 @@ extension ViewController {
         }
         
         self.current += 1
-        self.tecPlayer?.playTrack(identifier: self.playList[self.current])
-        
+        self.tecPlayer?.playTrack(identifier: self.playList[self.current]){ error in
+            print(error["msg"] ?? "Unknown Error.")
+        }
         return MPRemoteCommandHandlerStatus.success
     }
     
     func previousTrackCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
-        guard self.current > 0 else {
+        guard self.current >= 1 else {
             return MPRemoteCommandHandlerStatus.commandFailed
         }
         
-        guard self.current < self.playList.count else {
+        guard self.current <= self.playList.count - 1 else {
             return MPRemoteCommandHandlerStatus.commandFailed
         }
         
         self.current -= 1
-        self.tecPlayer?.playTrack(identifier: self.playList[self.current])
-        
+        self.tecPlayer?.playTrack(identifier: self.playList[self.current]){ error in
+            print(error["msg"] ?? "Unknown Error.")
+        }
         return MPRemoteCommandHandlerStatus.success
     }
+    
+    func seekCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        //self.sendChangeStateEvent("playing")
+        let event_ = event as! MPChangePlaybackPositionCommandEvent
+        self.tecPlayer?.seek(to: event_.positionTime)
+        return MPRemoteCommandHandlerStatus.success
+    }
+    
+    func loopCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        return MPRemoteCommandHandlerStatus.success
+    }
+    
+    func shuffleCommand(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
+        return MPRemoteCommandHandlerStatus.success
+    }
+    
     
     func playCommend(event: MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus {
         self.tecPlayer?.play()
